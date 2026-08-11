@@ -3,365 +3,831 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Правила переноса данных в карточку объекта — HubEx</title>
+<title>Настройка правил переноса данных в карточку объекта</title>
 <style>
   :root {
-    --bg: #f5f6f8;
-    --panel: #ffffff;
-    --border: #e2e5ea;
-    --text: #1f2430;
-    --muted: #6b7280;
-    --accent: #2563eb;
-    --accent-dark: #1d4ed8;
-    --ok-bg: #ecfdf3;
-    --ok-border: #86e0ab;
-    --ok-text: #067647;
-    --warn-bg: #fffaeb;
-    --warn-border: #fec84b;
-    --warn-text: #93650b;
-    --err-bg: #fef3f2;
-    --err-border: #fda29b;
-    --err-text: #b42318;
+    --bg: #F3F5F4;
+    --surface: #FFFFFF;
+    --surface-2: #F8FAF9;
+    --border: #DEE4E2;
+    --ink: #1A2422;
+    --ink-soft: #57635F;
+    --ink-faint: #8B958F;
+    --accent: #1F6F64;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #E4F0EC;
+    --accent-soft-ink: #14524A;
+    --good: #2E7D5B;
+    --good-soft: #E5F3EB;
+    --warn: #A66A15;
+    --warn-soft: #FBF0DE;
+    --bad: #B5423A;
+    --bad-soft: #FBEAE8;
+    --mute: #7A8480;
+    --mute-soft: #ECEFED;
+    --shadow: 0 8px 28px rgba(20, 40, 35, 0.12);
+    --radius: 10px;
+    --sans: "Segoe UI", "Segoe UI Variable", ui-sans-serif, system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: "Cascadia Mono", ui-monospace, "Consolas", "SFMono-Regular", Menlo, monospace;
   }
+
+  :root[data-theme="dark"] {
+    --bg: #121614;
+    --surface: #1A211E;
+    --surface-2: #1F2724;
+    --border: #2C3634;
+    --ink: #E9EFEC;
+    --ink-soft: #A6B2AD;
+    --ink-faint: #6E7A75;
+    --accent: #4FBBA8;
+    --accent-ink: #06201B;
+    --accent-soft: #1D3733;
+    --accent-soft-ink: #7BD3C3;
+    --good: #4DA57E;
+    --good-soft: #1B2F26;
+    --warn: #D6A34C;
+    --warn-soft: #322A18;
+    --bad: #D9776E;
+    --bad-soft: #3A211F;
+    --mute: #8B958F;
+    --mute-soft: #232B28;
+    --shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121614;
+      --surface: #1A211E;
+      --surface-2: #1F2724;
+      --border: #2C3634;
+      --ink: #E9EFEC;
+      --ink-soft: #A6B2AD;
+      --ink-faint: #6E7A75;
+      --accent: #4FBBA8;
+      --accent-ink: #06201B;
+      --accent-soft: #1D3733;
+      --accent-soft-ink: #7BD3C3;
+      --good: #4DA57E;
+      --good-soft: #1B2F26;
+      --warn: #D6A34C;
+      --warn-soft: #322A18;
+      --bad: #D9776E;
+      --bad-soft: #3A211F;
+      --mute: #8B958F;
+      --mute-soft: #232B28;
+      --shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+    }
+  }
+
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     background: var(--bg);
-    color: var(--text);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
-  .app { max-width: 960px; margin: 0 auto; padding: 24px 20px 80px; }
-  h1 { font-size: 20px; margin: 0 0 4px; }
-  .subtitle { color: var(--muted); font-size: 13px; margin: 0 0 24px; }
-  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-  .badge-tenant {
-    display: inline-block; font-size: 12px; color: var(--muted);
-    background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
-    padding: 3px 8px;
-  }
-  button {
-    font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--border);
-    background: var(--panel); padding: 8px 14px; color: var(--text);
-  }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  button.primary:hover { background: var(--accent-dark); }
-  button.primary:disabled { background: #a9b8d8; border-color: #a9b8d8; cursor: not-allowed; }
-  button.ghost { background: transparent; border-color: transparent; color: var(--muted); }
-  button.ghost:hover { color: var(--err-text); }
-  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
-  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .02em; background: #fafbfc; }
-  tr:last-child td { border-bottom: none; }
-  .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); margin-left: 6px; }
-  .src-line { color: var(--muted); font-size: 12px; margin-top: 2px; }
-  .empty { text-align: center; color: var(--muted); padding: 40px 0; font-size: 13px; }
+  .app { max-width: 1240px; margin: 0 auto; padding: 28px 24px 80px; }
 
-  .overlay { position: fixed; inset: 0; background: rgba(15,20,30,.35); display: none; }
-  .overlay.open { display: block; }
-  .drawer {
-    position: fixed; top: 0; right: -440px; width: 420px; max-width: 92vw; height: 100%;
-    background: var(--panel); box-shadow: -8px 0 24px rgba(0,0,0,.12);
-    transition: right .25s ease; display: flex; flex-direction: column;
+  /* ---- top bar ---- */
+  .crumb { font-size: 12px; color: var(--ink-faint); letter-spacing: .02em; margin-bottom: 6px; }
+  .topbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+  .topbar-text { flex: 1 1 420px; min-width: 260px; }
+  .topbar h1 { font-size: 20px; font-weight: 600; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+  .topbar p { margin: 4px 0 0; color: var(--ink-soft); font-size: 13px; max-width: 100%; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    border-radius: 8px; border: 1px solid transparent;
+    padding: 9px 15px; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; font-family: inherit; white-space: nowrap;
+    transition: filter .12s ease, background .12s ease;
   }
-  .drawer.open { right: 0; }
-  .drawer-head { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-  .drawer-head h2 { font-size: 16px; margin: 0; }
-  .drawer-body { padding: 18px 20px; overflow-y: auto; flex: 1; }
-  .drawer-foot { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-primary:disabled { background: var(--mute-soft); color: var(--ink-faint); cursor: not-allowed; filter: none; }
+  .btn-danger { background: var(--bad); color: #fff; }
+  .btn-danger:hover { filter: brightness(1.08); }
+  .btn-ghost { background: transparent; color: var(--ink-soft); border-color: var(--border); }
+  .btn-ghost:hover { background: var(--surface-2); color: var(--ink); }
+  .btn-icon { background: transparent; border: none; color: var(--ink-faint); cursor: pointer; padding: 6px; border-radius: 6px; display: inline-flex; }
+  .btn-icon:hover { background: var(--mute-soft); color: var(--ink); }
+
+  /* ---- table card ---- */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .table-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 960px; }
+  thead th {
+    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--ink-faint); font-weight: 600; padding: 12px 16px; border-bottom: 1px solid var(--border);
+    background: var(--surface-2); white-space: nowrap;
+  }
+  tbody td { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  td.field-cell { max-width: 260px; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-2); }
+  .rule-name { font-weight: 600; }
+  .rule-sub { color: var(--ink-faint); font-size: 12px; margin-top: 2px; }
+
+  .src-badge {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600;
+    padding: 2px 8px; border-radius: 6px; margin-bottom: 5px;
+  }
+  .src-checklist { background: var(--accent-soft); color: var(--accent-soft-ink); }
+  .src-task { background: #E9E3FB; color: #5B3FA6; }
+  .field-pill {
+    display: inline-flex; align-items: flex-start; gap: 6px; max-width: 100%;
+    padding: 2px 0; font-size: 12.5px;
+  }
+  .field-pill .pill-name { white-space: normal; word-break: break-word; line-height: 1.35; }
+  .arrow { color: var(--ink-faint); font-size: 15px; }
+
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .chip-on { background: var(--good-soft); color: var(--good); }
+  .chip-off { background: var(--mute-soft); color: var(--mute); }
+  .chip-warn { background: var(--warn-soft); color: var(--warn); }
+  .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .row-actions { display: flex; gap: 2px; justify-content: flex-end; }
+
+  /* ---- drawer ---- */
+  .scrim {
+    position: fixed; inset: 0; background: rgba(10, 16, 14, 0.38);
+    opacity: 0; pointer-events: none; transition: opacity .18s ease; z-index: 10;
+  }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+
+  .drawer {
+    position: fixed; top: 0; right: 0; height: 100%; width: min(500px, 92vw);
+    background: var(--surface); border-left: 1px solid var(--border);
+    box-shadow: var(--shadow); transform: translateX(100%);
+    transition: transform .22s cubic-bezier(.32,.72,.24,1); z-index: 11;
+    display: flex; flex-direction: column;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-head { padding: 20px 22px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .drawer-head h2 { font-size: 16.5px; margin: 0 0 3px; font-weight: 600; }
+  .drawer-head p { margin: 0; color: var(--ink-faint); font-size: 12.5px; }
+  .drawer-body { padding: 20px 22px 10px; overflow-y: auto; flex: 1; }
+  .drawer-foot { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
 
   .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-  select, input[type=text] {
-    width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px;
-    font: inherit; background: #fff; color: var(--text);
+  .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field .hint { font-size: 11.5px; color: var(--ink-faint); margin-top: 5px; }
+  select, input[type="text"] {
+    width: 100%; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--ink); font-family: inherit; font-size: 13.5px;
   }
-  select:disabled { background: #f2f3f5; color: var(--muted); }
+  select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-  .toggle { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
-  .toggle button { flex: 1; border: none; border-radius: 0; background: #fff; color: var(--muted); }
-  .toggle button.active { background: var(--accent); color: #fff; }
+  .segmented { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; width: 100%; }
+  .seg-btn {
+    flex: 1; border: none; background: var(--surface-2); color: var(--ink-soft);
+    font-family: inherit; font-size: 13px; font-weight: 600; padding: 9px 10px; cursor: pointer;
+  }
+  .seg-btn + .seg-btn { border-left: 1px solid var(--border); }
+  .seg-btn.active { background: var(--accent); color: var(--accent-ink); }
 
-  .banner { border-radius: 8px; padding: 10px 12px; font-size: 12.5px; border: 1px solid; margin-top: 4px; }
-  .banner.ok { background: var(--ok-bg); border-color: var(--ok-border); color: var(--ok-text); }
-  .banner.warn { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
-  .banner.err { background: var(--err-bg); border-color: var(--err-border); color: var(--err-text); }
-  .banner.idle { background: #f2f3f5; border-color: var(--border); color: var(--muted); }
+  .mapping-preview {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    background: var(--surface-2); border: 1px dashed var(--border); border-radius: 8px;
+    padding: 12px 14px; margin: 4px 0 18px; font-size: 12.5px;
+  }
+  .mapping-preview .arrow { font-size: 16px; }
 
-  .note {
-    margin-top: 28px; font-size: 12px; color: var(--muted); border-top: 1px dashed var(--border);
-    padding-top: 12px; line-height: 1.5;
+  .banner { display: flex; gap: 9px; padding: 10px 12px; border-radius: 8px; font-size: 12.5px; margin-bottom: 18px; align-items: flex-start; }
+  .banner-good { background: var(--good-soft); color: var(--good); }
+  .banner-warn { background: var(--warn-soft); color: var(--warn); }
+  .banner-bad { background: var(--bad-soft); color: var(--bad); }
+  .banner svg { flex: none; margin-top: 1px; }
+  .banner .values-line { margin-top: 4px; opacity: .85; font-size: 11.5px; }
+
+  .radio-group { display: flex; flex-direction: column; gap: 8px; }
+  .radio-opt { display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+  .radio-opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+  .radio-opt input { margin-top: 3px; accent-color: var(--accent); }
+  .radio-opt .opt-title { font-weight: 600; font-size: 13px; }
+  .radio-opt .opt-sub { font-size: 11.5px; color: var(--ink-faint); margin-top: 1px; }
+
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 2px 0 6px; }
+  .switch { position: relative; width: 38px; height: 22px; flex: none; }
+  .switch input { opacity: 0; width: 100%; height: 100%; margin: 0; position: absolute; cursor: pointer; }
+  .switch .track { position: absolute; inset: 0; background: var(--mute-soft); border-radius: 999px; transition: background .15s; }
+  .switch .thumb { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .15s; }
+  .switch input:checked + .track { background: var(--accent); }
+  .switch input:checked ~ .thumb { transform: translateX(16px); }
+
+  details.api-note { margin-top: 22px; border-top: 1px solid var(--border); padding-top: 14px; }
+  details.api-note summary { cursor: pointer; font-size: 12px; color: var(--ink-faint); font-weight: 600; list-style: none; display: flex; align-items: center; gap: 6px; }
+  details.api-note summary::-webkit-details-marker { display: none; }
+  details.api-note summary::before { content: "▸"; transition: transform .15s; }
+  details.api-note[open] summary::before { transform: rotate(90deg); }
+  details.api-note .note-body { font-family: var(--mono); font-size: 11.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.8; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  details.api-note .note-body b { color: var(--ink); font-weight: 600; }
+
+  .footer-note { margin-top: 26px; padding: 16px 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); font-size: 12.5px; color: var(--ink-soft); }
+  .footer-note b { color: var(--ink); }
+
+  #deleteScrim { z-index: 20; }
+  .confirm-card {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(.97);
+    width: min(380px, 90vw); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 20px 22px; z-index: 21;
+    opacity: 0; pointer-events: none; transition: opacity .15s ease, transform .15s ease;
+  }
+  .confirm-card.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .confirm-title { font-weight: 600; font-size: 14.5px; margin-bottom: 6px; }
+  .confirm-text { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 18px; }
+  .confirm-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .drawer, .scrim { transition: none; }
   }
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="toolbar">
-    <div>
-      <h1>Правила переноса данных в карточку объекта</h1>
-      <p class="subtitle">Источник — поле чеклиста или поле заявки. Цель — атрибут объекта (оборудования).</p>
+  <div class="crumb">HubEx · Плагины · Настройки · Тенант «Производство» (162)</div>
+  <div class="topbar">
+    <div class="topbar-text">
+      <h1>Настройка правил переноса данных в карточку объекта</h1>
+      <p>Правило определяет одно поле-источник (из чек-листа или из самой заявки) и одно поле объекта, куда оно копируется. Стадия, при переходе на которую срабатывает перенос, задаётся отдельно — в настройке вебхука, не здесь. Сам перенос выполняет отдельный сервис — этот экран только настраивает правила текущего тенанта.</p>
     </div>
-    <span class="badge-tenant">Тенант: Производство (демо)</span>
+    <button class="btn btn-primary" onclick="openDrawer()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1V13M1 7H13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Добавить правило
+    </button>
   </div>
 
-  <div class="toolbar">
-    <div></div>
-    <button class="primary" id="btnAdd">+ Добавить правило</button>
+  <div class="card">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Правило</th>
+            <th>Источник</th>
+            <th>Исходное поле</th>
+            <th>Целевое поле</th>
+            <th>Условие перезаписи</th>
+            <th>Статус</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rulesBody"></tbody>
+      </table>
+    </div>
   </div>
 
-  <table>
-    <thead>
-      <tr><th>Источник</th><th>Целевой атрибут объекта</th><th>Статус</th><th></th></tr>
-    </thead>
-    <tbody id="rulesBody"></tbody>
-  </table>
-  <div class="empty" id="emptyState" style="display:none">Правил пока нет — нажмите «Добавить правило»</div>
-
-  <div class="note">
-    Пробная версия плагина (UI-мокап). Данные (чеклисты, атрибуты) — демонстрационные, для проверки логики
-    подбора полей и совместимости типов. Хранение правил и сам перенос данных выполняет отдельный сервис
-    (в этот мокап не входит).
+  <div class="footer-note">
+    <b>Область действия:</b> правила настраиваются отдельно в каждом тенанте — плагин открывается внутри админки тенанта и видит только его чек-листы, заявки и атрибуты.<br><br>
+    <b>Проверка типов при сохранении:</b> тип поля-источника и поля объекта должен совпадать — иначе сохранить правило нельзя. Для полей типа «список» (Select) одного типа недостаточно: у чек-листовых/заявочных и объектных Select-полей независимые справочники вариантов (<code>listOfValues</code>), поэтому дополнительно сверяются сами варианты ответа — если наборы не совпадают, сохранение тоже заблокировано, пока варианты не приведены к одному виду.<br><br>
+    <b>Стадия не хранится в правиле:</b> когда именно срабатывает перенос, определяет вебхук (событие + стадии, на которых он вызывается) — это настраивается отдельно от правила. Правило описывает только пару полей и условие перезаписи.
   </div>
+
+  <details class="api-note">
+    <summary>Какие вызовы API стоят за этим экраном (тенант «Производство», проверено живым вызовом)</summary>
+    <div class="note-body">
+      <b>Источник = Чек-лист, шаг «чек-лист»</b> → GET /WORK/CheckLists <span style="opacity:.7">— 5 чек-листов в тенанте</span><br>
+      <b>Источник = Чек-лист, шаг «поле»</b> → GET /WORK/CheckLists/{id}/items <span style="opacity:.7">— берём только пункты, где attribute != null (это касается и Switch-пунктов — у них тоже есть привязанный атрибут)</span><br>
+      <b>Источник = Заявка, шаг «поле»</b> → GET /COMMON/Attributes?isRelevantForTask=true <span style="opacity:.7">— 14 полей</span><br>
+      <b>Поле объекта</b> → GET /COMMON/Attributes?isRelevantForAsset=true <span style="opacity:.7">— 13 полей</span><br>
+      <b>Тип поля</b> — из <code>attributeType.code</code> (чек-лист) или <code>type.code</code> (COMMON/Attributes, другое имя поля в ответе) — используется для проверки совместимости<br>
+      <b>Варианты списка (Select)</b> → GET /Attributes/{attributeID}/listOfValues для обоих полей <span style="opacity:.7">— в этом макете подставлены иллюстративные варианты, живой вызов не успел (токен тенанта истёк за 30 мин)</span><br>
+      <b>Триггер (не в этом экране)</b> — вебхук HubEx: POST /MSG/Webhooks с <code>events</code> + <code>taskStages</code> — стадия(и), на которых он срабатывает, настраивается там<br>
+      <b>Сама запись значения в объект</b> (не этот экран, делает отдельный сервис, вызванный вебхуком) → POST /ES/AssetAttributes/v2
+    </div>
+  </details>
 </div>
 
-<div class="overlay" id="overlay"></div>
-<div class="drawer" id="drawer">
+<div class="scrim" id="scrim" onclick="onCancelClick()"></div>
+<div class="drawer" id="drawer" role="dialog" aria-label="Новое правило переноса">
   <div class="drawer-head">
-    <h2>Новое правило</h2>
-    <button class="ghost" id="btnClose">✕</button>
+    <div>
+      <h2>Новое правило</h2>
+      <p>Перенос значений чеклистов и заявок в карточку объекта</p>
+    </div>
+    <button class="btn-icon" onclick="onCancelClick()" aria-label="Закрыть">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 2L14 14M14 2L2 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
   </div>
+
   <div class="drawer-body">
-
-    <div class="toggle">
-      <button class="active" data-src="checklist" id="tabChecklist">Поле чеклиста</button>
-      <button data-src="task" id="tabTask">Поле заявки</button>
-    </div>
-
-    <div id="checklistFields">
-      <div class="field">
-        <label>Чеклист</label>
-        <select id="selChecklist"></select>
-      </div>
-      <div class="field">
-        <label>Пункт чеклиста</label>
-        <select id="selChecklistItem"></select>
+    <div class="field">
+      <label>Источник значения</label>
+      <div class="segmented">
+        <button type="button" class="seg-btn active" id="segChecklist" onclick="setSource('checklist')">Чек-лист</button>
+        <button type="button" class="seg-btn" id="segTask" onclick="setSource('task')">Заявка</button>
       </div>
     </div>
 
-    <div id="taskFields" style="display:none">
-      <div class="field">
-        <label>Поле заявки</label>
-        <select id="selTaskField"></select>
+    <div class="field" id="checklistPicker">
+      <label>Чек-лист</label>
+      <select id="checklistSelect" onchange="onChecklistChange()">
+        <option value="" selected disabled>— выберите чек-лист —</option>
+        <option>Обход/осмотр оборудования</option>
+        <option>Плановое ТО механического и насосного оборудования</option>
+        <option>Плановое ТО холодильного и котельного оборудования</option>
+        <option>Плановое ТО электротехнического и КИПиА оборудования</option>
+        <option>Снятие показаний наработки</option>
+      </select>
+      <div class="hint">GET /WORK/CheckLists</div>
+    </div>
+
+    <div class="field">
+      <label id="sourceFieldLabel">Выберите поле чек-листа</label>
+      <select id="sourceFieldSelect" onchange="updatePreview()"></select>
+      <div class="hint" id="sourceFieldHint">Показаны только пункты с привязанным атрибутом — обычные флажки-пункты значения не несут.</div>
+    </div>
+
+    <div class="field">
+      <label>Выберите поле объекта</label>
+      <select id="targetFieldSelect" onchange="updatePreview()">
+        <option value="" selected disabled>— выберите поле объекта —</option>
+        <option value="Показания счётчика наработки" data-type="Decimal">Показания счётчика наработки — число</option>
+        <option value="Дата ввода в эксплуатацию" data-type="Date">Дата ввода в эксплуатацию — дата</option>
+        <option value="Дата последнего капитального ремонта" data-type="Date">Дата последнего капитального ремонта — дата</option>
+        <option value="Строка" data-type="String">Строка — строка</option>
+        <option value="Класс критичности" data-type="Select" data-values="Критичный,Некритичный,Средней критичности">Класс критичности — список</option>
+        <option value="Поднадзорность" data-type="Select" data-values="Подконтрольно,Не подконтрольно">Поднадзорность — список</option>
+        <option value="Плановый межремонтный ресурс" data-type="Int">Плановый межремонтный ресурс — целое число</option>
+        <option value="Период контроля повторности" data-type="Int">Период контроля повторности — целое число</option>
+      </select>
+      <div class="hint">GET /COMMON/Attributes?isRelevantForAsset=true</div>
+    </div>
+
+    <div class="mapping-preview" id="mappingPreview" style="display:none;">
+      <span class="field-pill"><span id="prevSrc"></span></span>
+      <span class="arrow">⟶</span>
+      <span class="field-pill"><span id="prevDst"></span></span>
+    </div>
+
+    <div class="banner banner-good" id="compatBanner" style="display:none;">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/><path d="M5 8L7 10L11 5.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div id="compatText"></div>
+    </div>
+
+    <div class="field">
+      <label>Если поле объекта уже заполнено</label>
+      <div class="radio-group">
+        <label class="radio-opt">
+          <input type="radio" name="overwrite" value="always" onchange="validateForm()">
+          <div><div class="opt-title">Перезаписать</div><div class="opt-sub">Новое значение всегда заменяет текущее</div></div>
+        </label>
+        <label class="radio-opt">
+          <input type="radio" name="overwrite" value="ifEmpty" onchange="validateForm()">
+          <div><div class="opt-title">Только если поле объекта пустое</div><div class="opt-sub">Существующее значение не трогаем</div></div>
+        </label>
+        <label class="radio-opt">
+          <input type="radio" name="overwrite" value="ifSourceFilled" onchange="validateForm()">
+          <div><div class="opt-title">Только если значение источника заполнено</div><div class="opt-sub">Пустое значение не затирает поле объекта</div></div>
+        </label>
       </div>
     </div>
 
     <div class="field">
-      <label>Куда переносим — поле объекта</label>
-      <select id="selAssetField"></select>
+      <label>Название правила</label>
+      <input type="text" id="ruleNameInput" value="" placeholder="Например, «Наработка оборудования»" oninput="validateForm()">
     </div>
 
-    <div class="banner idle" id="compatBanner">Выберите источник и целевое поле, чтобы проверить совместимость типов.</div>
+    <div class="field">
+      <div class="toggle-row">
+        <div>
+          <div style="font-weight:600; font-size:13px;">Правило активно</div>
+          <div class="hint" style="margin-top:2px;">Выключенные правила сохраняются, но не выполняются</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="activeToggle" checked>
+          <span class="track"></span>
+          <span class="thumb"></span>
+        </label>
+      </div>
+    </div>
   </div>
+
   <div class="drawer-foot">
-    <button id="btnCancel">Отмена</button>
-    <button class="primary" id="btnSave" disabled>Сохранить правило</button>
+    <button class="btn btn-ghost" onclick="onCancelClick()">Отмена</button>
+    <button class="btn btn-primary" id="saveBtn" onclick="saveRule()" disabled>Сохранить правило</button>
+  </div>
+</div>
+
+<div class="scrim" id="deleteScrim" onclick="closeConfirm()"></div>
+<div class="confirm-card" id="deleteConfirm" role="dialog" aria-label="Подтверждение">
+  <div class="confirm-title" id="confirmTitle"></div>
+  <div class="confirm-text" id="confirmText"></div>
+  <div class="confirm-actions">
+    <button class="btn btn-ghost" onclick="closeConfirm()">Отмена</button>
+    <button class="btn btn-danger" id="confirmActionBtn" onclick="runConfirmedAction()">Удалить</button>
   </div>
 </div>
 
 <script>
-// ---- демо-данные (тенант "Производство", условные значения для мокапа) ----
-const CHECKLISTS = [
-  { id: 1, name: "Обход/осмотр оборудования", items: [
-    { name: "Осмотр выполнен", type: "Switch" },
-    { name: "Фото объекта", type: "Attachment" },
-    { name: "Замечания по осмотру", type: "Text" },
-  ]},
-  { id: 2, name: "Плановое ТО механического и насосного оборудования", items: [
-    { name: "ТО выполнено", type: "Switch" },
-    { name: "Наработка на момент ТО", type: "Decimal" },
-  ]},
-  { id: 3, name: "Плановое ТО холодильного и котельного оборудования", items: [
-    { name: "ТО выполнено", type: "Switch" },
-    { name: "Давление в системе", type: "Decimal" },
-  ]},
-  { id: 4, name: "Плановое ТО электротехнического и КИПиА оборудования", items: [
-    { name: "ТО выполнено", type: "Switch" },
-    { name: "Акт поверки", type: "Attachment" },
-  ]},
-  { id: 5, name: "Снятие показаний наработки", items: [
-    { name: "Текущие показания счётчика наработки", type: "Decimal" },
-    { name: "Фото показаний", type: "Attachment" },
-  ]},
-];
+  var CHECKLIST_ITEMS_BY_NAME = {
+    'Обход/осмотр оборудования': [
+      { name: 'Состояние оборудования в норме', type: 'Switch' },
+      { name: 'Уровень шума/вибрации в норме', type: 'Switch' },
+      { name: 'Утечки (масло/хладагент/пар)', type: 'Switch' },
+      { name: 'Фото объекта', type: 'Attachment' },
+      { name: 'Комментарий', type: 'Text' }
+    ],
+    'Плановое ТО механического и насосного оборудования': [
+      { name: 'Состояние привода/подшипников в норме', type: 'Switch' },
+      { name: 'Натяжение и износ приводного ремня в норме', type: 'Switch' },
+      { name: 'Уровень вибрации/шума в норме', type: 'Switch' },
+      { name: 'Смазка выполнена', type: 'Switch' },
+      { name: 'Фото узла', type: 'Attachment' },
+      { name: 'Комментарий', type: 'Text' }
+    ],
+    'Плановое ТО холодильного и котельного оборудования': [
+      { name: 'Давление нагнетания/всасывания', type: 'Decimal' },
+      { name: 'Уровень масла в норме', type: 'Switch' },
+      { name: 'Герметичность контура в норме', type: 'Switch' },
+      { name: 'Фото манометра', type: 'Attachment' },
+      { name: 'Комментарий', type: 'Text' }
+    ],
+    'Плановое ТО электротехнического и КИПиА оборудования': [
+      { name: 'Контактные соединения/изоляция в норме', type: 'Switch' },
+      { name: 'Показания приборов КИПиА в норме', type: 'Switch' },
+      { name: 'Калибровка/поверка выполнена', type: 'Switch' },
+      { name: 'Фото щита/панели', type: 'Attachment' },
+      { name: 'Комментарий', type: 'Text' }
+    ],
+    'Снятие показаний наработки': [
+      { name: 'Текущие показания счётчика наработки', type: 'Decimal' },
+      { name: 'Фото показаний счётчика/датчика', type: 'Attachment' },
+      { name: 'Комментарий', type: 'Text' }
+    ]
+  };
+  var TASK_FIELDS = [
+    { name: 'Фактическая дата ввода в эксплуатацию', type: 'Date' },
+    { name: 'Номер акта ввода в эксплуатацию', type: 'String' },
+    { name: 'Причина отказа', type: 'Select', values: ['Износ оборудования', 'Ошибка персонала', 'Заводской брак', 'Внешнее воздействие'] },
+    { name: 'Объём ремонта', type: 'Select', values: ['Текущий', 'Капитальный', 'Средний'] },
+    { name: 'Влияние на производственный план', type: 'Switch' }
+  ];
 
-const TASK_FIELDS = [
-  { name: "Тип заявки", type: "Select" },
-  { name: "Приоритет", type: "Select" },
-  { name: "Плановая дата выполнения", type: "Date" },
-  { name: "Наработка (по заявке)", type: "Decimal" },
-  { name: "Комментарий исполнителя", type: "Text" },
-];
+  var TYPE_LABEL = {
+    Decimal: 'число', Int: 'целое число', Date: 'дата', Datetime: 'дата и время',
+    String: 'строка', Text: 'текст', Select: 'список', Attachment: 'файл', Switch: 'да/нет'
+  };
+  var OVERWRITE_LABEL = {
+    always: 'Перезаписать', ifEmpty: 'Только если поле объекта пустое', ifSourceFilled: 'Только если значение источника заполнено'
+  };
 
-const ASSET_FIELDS = [
-  { id: 18, name: "Показания счётчика наработки", type: "Decimal" },
-  { id: 3, name: "Модель", type: "Text" },
-  { id: 4, name: "Серийный номер", type: "Text" },
-  { id: 7, name: "Дата ввода в эксплуатацию", type: "Date" },
-  { id: 9, name: "Статус объекта", type: "Select" },
-  { id: 12, name: "Ответственный", type: "Text" },
-];
+  var RULES = [
+    { id: 1, name: 'Наработка оборудования', sourceKind: 'checklist', checklistName: 'Снятие показаний наработки',
+      sourceFieldName: 'Текущие показания счётчика наработки', sourceFieldType: 'Decimal', sourceFieldValues: null,
+      targetFieldName: 'Показания счётчика наработки', targetFieldType: 'Decimal', targetFieldValues: null,
+      overwrite: 'always', active: true, created: '12.07.2026' },
+    { id: 2, name: 'Дата ввода в эксплуатацию', sourceKind: 'task', checklistName: null,
+      sourceFieldName: 'Фактическая дата ввода в эксплуатацию', sourceFieldType: 'Date', sourceFieldValues: null,
+      targetFieldName: 'Дата ввода в эксплуатацию', targetFieldType: 'Date', targetFieldValues: null,
+      overwrite: 'ifEmpty', active: true, created: '03.06.2026' },
+    { id: 3, name: 'Номер акта в общую строку', sourceKind: 'task', checklistName: null,
+      sourceFieldName: 'Номер акта ввода в эксплуатацию', sourceFieldType: 'String', sourceFieldValues: null,
+      targetFieldName: 'Строка', targetFieldType: 'String', targetFieldValues: null,
+      overwrite: 'always', active: false, created: '28.05.2026' }
+  ];
+  var nextId = 4;
+  var editingId = null;
 
-const TYPE_LABEL = { Switch: "Флажок", Attachment: "Файл", Decimal: "Число", Text: "Текст", Date: "Дата", Select: "Список" };
-
-let rules = [
-  { srcKind: "checklist", srcLabel: "Снятие показаний наработки → Текущие показания счётчика наработки", srcType: "Decimal",
-    targetName: "Показания счётчика наработки", targetType: "Decimal" },
-];
-
-// ---- рендер списка правил ----
-const rulesBody = document.getElementById("rulesBody");
-const emptyState = document.getElementById("emptyState");
-
-function statusFor(srcType, targetType) {
-  if (srcType === targetType) return { cls: "ok", text: "Типы совпадают" };
-  if (srcType === "Select" && targetType === "Select") return { cls: "warn", text: "Оба — списки, нужна ручная сверка значений" };
-  return { cls: "err", text: "Типы не совпадают" };
-}
-
-function renderRules() {
-  rulesBody.innerHTML = "";
-  emptyState.style.display = rules.length ? "none" : "block";
-  rules.forEach((r, i) => {
-    const st = statusFor(r.srcType, r.targetType);
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${r.srcLabel}<div class="src-line">${r.srcKind === "checklist" ? "источник: чеклист" : "источник: поле заявки"}</div></td>
-      <td>${r.targetName} <span class="pill">${TYPE_LABEL[r.targetType]}</span></td>
-      <td><span class="banner ${st.cls}" style="display:inline-block;padding:4px 10px;">${st.text}</span></td>
-      <td><button class="ghost" data-del="${i}">Удалить</button></td>
-    `;
-    rulesBody.appendChild(tr);
-  });
-}
-renderRules();
-
-rulesBody.addEventListener("click", (e) => {
-  const idx = e.target.getAttribute("data-del");
-  if (idx !== null) { rules.splice(Number(idx), 1); renderRules(); }
-});
-
-// ---- drawer ----
-const overlay = document.getElementById("overlay");
-const drawer = document.getElementById("drawer");
-const btnAdd = document.getElementById("btnAdd");
-const btnClose = document.getElementById("btnClose");
-const btnCancel = document.getElementById("btnCancel");
-const btnSave = document.getElementById("btnSave");
-const compatBanner = document.getElementById("compatBanner");
-
-const tabChecklist = document.getElementById("tabChecklist");
-const tabTask = document.getElementById("tabTask");
-const checklistFields = document.getElementById("checklistFields");
-const taskFields = document.getElementById("taskFields");
-
-const selChecklist = document.getElementById("selChecklist");
-const selChecklistItem = document.getElementById("selChecklistItem");
-const selTaskField = document.getElementById("selTaskField");
-const selAssetField = document.getElementById("selAssetField");
-
-let srcMode = "checklist";
-
-function fillSelect(sel, options, getLabel) {
-  sel.innerHTML = "";
-  options.forEach((opt, i) => {
-    const o = document.createElement("option");
-    o.value = i;
-    o.textContent = getLabel(opt);
-    sel.appendChild(o);
-  });
-}
-
-fillSelect(selChecklist, CHECKLISTS, c => c.name);
-fillSelect(selTaskField, TASK_FIELDS, f => `${f.name} (${TYPE_LABEL[f.type]})`);
-fillSelect(selAssetField, ASSET_FIELDS, f => `${f.name} (${TYPE_LABEL[f.type]})`);
-
-function fillChecklistItems() {
-  const cl = CHECKLISTS[selChecklist.value];
-  fillSelect(selChecklistItem, cl.items, it => `${it.name} (${TYPE_LABEL[it.type]})`);
-}
-fillChecklistItems();
-
-selChecklist.addEventListener("change", () => { fillChecklistItems(); updateCompat(); });
-selChecklistItem.addEventListener("change", updateCompat);
-selTaskField.addEventListener("change", updateCompat);
-selAssetField.addEventListener("change", updateCompat);
-
-function setSrcMode(mode) {
-  srcMode = mode;
-  tabChecklist.classList.toggle("active", mode === "checklist");
-  tabTask.classList.toggle("active", mode === "task");
-  checklistFields.style.display = mode === "checklist" ? "block" : "none";
-  taskFields.style.display = mode === "task" ? "block" : "none";
-  updateCompat();
-}
-tabChecklist.addEventListener("click", () => setSrcMode("checklist"));
-tabTask.addEventListener("click", () => setSrcMode("task"));
-
-function currentSourceType() {
-  if (srcMode === "checklist") {
-    return CHECKLISTS[selChecklist.value].items[selChecklistItem.value].type;
+  function makePill(name) {
+    var pill = document.createElement('span');
+    pill.className = 'field-pill';
+    var label = document.createElement('span');
+    label.className = 'pill-name';
+    label.textContent = name;
+    pill.appendChild(label);
+    return pill;
   }
-  return TASK_FIELDS[selTaskField.value].type;
-}
 
-function updateCompat() {
-  const srcType = currentSourceType();
-  const target = ASSET_FIELDS[selAssetField.value];
-  const st = statusFor(srcType, target.type);
-  compatBanner.className = "banner " + st.cls;
-  if (st.cls === "ok") {
-    compatBanner.textContent = `Типы совпадают (${TYPE_LABEL[srcType]}) — правило можно сохранить.`;
-    btnSave.disabled = false;
-  } else if (st.cls === "warn") {
-    compatBanner.textContent = "Оба поля — списки (Select), но справочники значений у них разные. Сопоставление значение-к-значению не проверено — потребуется ручная проверка после сохранения.";
-    btnSave.disabled = false;
-  } else {
-    compatBanner.textContent = `Источник — ${TYPE_LABEL[srcType]}, цель — ${TYPE_LABEL[target.type]}. Разные типы данных, сохранение недоступно.`;
-    btnSave.disabled = true;
+  function renderTable() {
+    var body = document.getElementById('rulesBody');
+    body.innerHTML = '';
+    RULES.forEach(function (r) {
+      var tr = document.createElement('tr');
+
+      var nameCell = document.createElement('td');
+      var nameDiv = document.createElement('div');
+      nameDiv.className = 'rule-name';
+      nameDiv.textContent = r.name;
+      var createdDiv = document.createElement('div');
+      createdDiv.className = 'rule-sub';
+      createdDiv.textContent = 'создано ' + r.created;
+      nameCell.appendChild(nameDiv);
+      nameCell.appendChild(createdDiv);
+
+      var sourceCell = document.createElement('td');
+      var badge = document.createElement('span');
+      badge.className = r.sourceKind === 'checklist' ? 'src-badge src-checklist' : 'src-badge src-task';
+      badge.textContent = r.sourceKind === 'checklist' ? 'Чек-лист' : 'Заявка';
+      sourceCell.appendChild(badge);
+      if (r.sourceKind === 'checklist') {
+        sourceCell.appendChild(document.createElement('br'));
+        var checklistSub = document.createElement('span');
+        checklistSub.className = 'rule-sub';
+        checklistSub.style.marginTop = '0';
+        checklistSub.textContent = r.checklistName;
+        sourceCell.appendChild(checklistSub);
+      }
+
+      var srcFieldCell = document.createElement('td');
+      srcFieldCell.className = 'field-cell';
+      srcFieldCell.appendChild(makePill(r.sourceFieldName));
+
+      var dstFieldCell = document.createElement('td');
+      dstFieldCell.className = 'field-cell';
+      dstFieldCell.appendChild(makePill(r.targetFieldName));
+
+      var overwriteCell = document.createElement('td');
+      overwriteCell.textContent = OVERWRITE_LABEL[r.overwrite];
+
+      var statusCell = document.createElement('td');
+      var chip = document.createElement('span');
+      chip.className = r.active ? 'chip chip-on' : 'chip chip-off';
+      chip.textContent = r.active ? 'Активно' : 'Отключено';
+      statusCell.appendChild(chip);
+
+      var actionsCell = document.createElement('td');
+      actionsCell.innerHTML =
+        '<div class="row-actions">' +
+          '<button class="btn-icon" title="Изменить" onclick="openDrawer(' + r.id + ')"><svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M13.5 3.5L16.5 6.5L7 16H4V13L13.5 3.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button>' +
+          '<button class="btn-icon" title="Удалить" onclick="openDeleteConfirm(' + r.id + ')"><svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M4 6H16M8 6V4.5C8 4 8.4 3.5 9 3.5H11C11.6 3.5 12 4 12 4.5V6M6 6L6.7 16.2C6.75 16.7 7.2 17 7.7 17H12.3C12.8 17 13.25 16.7 13.3 16.2L14 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+        '</div>';
+
+      [nameCell, sourceCell, srcFieldCell, dstFieldCell, overwriteCell, statusCell, actionsCell].forEach(function (td) { tr.appendChild(td); });
+      body.appendChild(tr);
+    });
   }
-}
 
-function openDrawer() {
-  setSrcMode("checklist");
-  selChecklist.value = 0; fillChecklistItems(); selChecklistItem.value = 0;
-  selTaskField.value = 0; selAssetField.value = 0;
-  updateCompat();
-  overlay.classList.add("open");
-  drawer.classList.add("open");
-}
-function closeDrawer() {
-  overlay.classList.remove("open");
-  drawer.classList.remove("open");
-}
-btnAdd.addEventListener("click", openDrawer);
-btnClose.addEventListener("click", closeDrawer);
-btnCancel.addEventListener("click", closeDrawer);
-overlay.addEventListener("click", closeDrawer);
-
-btnSave.addEventListener("click", () => {
-  const srcType = currentSourceType();
-  const target = ASSET_FIELDS[selAssetField.value];
-  let srcLabel;
-  if (srcMode === "checklist") {
-    const cl = CHECKLISTS[selChecklist.value];
-    const it = cl.items[selChecklistItem.value];
-    srcLabel = `${cl.name} → ${it.name}`;
-  } else {
-    srcLabel = `Заявка: ${TASK_FIELDS[selTaskField.value].name}`;
+  function fillSourceOptions(list, presetName) {
+    var sel = document.getElementById('sourceFieldSelect');
+    sel.innerHTML = '';
+    var placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = '— выберите поле —';
+    placeholder.disabled = true;
+    placeholder.selected = !presetName;
+    sel.appendChild(placeholder);
+    list.forEach(function (f) {
+      var opt = document.createElement('option');
+      opt.value = f.name;
+      opt.textContent = f.name + ' — ' + (TYPE_LABEL[f.type] || f.type);
+      opt.setAttribute('data-type', f.type);
+      if (f.values) opt.setAttribute('data-values', f.values.join(','));
+      if (presetName && f.name === presetName) opt.selected = true;
+      sel.appendChild(opt);
+    });
   }
-  rules.push({ srcKind: srcMode, srcLabel, srcType, targetName: target.name, targetType: target.type });
-  renderRules();
-  closeDrawer();
-});
+
+  function currentChecklistItems() {
+    var name = document.getElementById('checklistSelect').value;
+    return CHECKLIST_ITEMS_BY_NAME[name] || [];
+  }
+
+  function onChecklistChange() {
+    // при смене чек-листа старое выбранное поле относится к другому чек-листу — сбрасываем
+    fillSourceOptions(currentChecklistItems());
+    updatePreview();
+  }
+
+  function setSource(kind, presetName) {
+    var isChecklist = kind === 'checklist';
+    document.getElementById('segChecklist').classList.toggle('active', isChecklist);
+    document.getElementById('segTask').classList.toggle('active', !isChecklist);
+    document.getElementById('checklistPicker').style.display = isChecklist ? '' : 'none';
+    document.getElementById('sourceFieldLabel').textContent = isChecklist ? 'Выберите поле чек-листа' : 'Выберите поле заявки';
+    document.getElementById('sourceFieldHint').textContent = isChecklist
+      ? (document.getElementById('checklistSelect').value
+          ? 'Показаны только пункты с привязанным атрибутом — обычные флажки-пункты значения не несут.'
+          : 'Сначала выберите чек-лист.')
+      : 'GET /COMMON/Attributes?isRelevantForTask=true';
+    fillSourceOptions(isChecklist ? currentChecklistItems() : TASK_FIELDS, presetName);
+    updatePreview();
+  }
+
+  function updatePreview() {
+    var srcSel = document.getElementById('sourceFieldSelect');
+    var dstSel = document.getElementById('targetFieldSelect');
+    var srcOpt = srcSel.options[srcSel.selectedIndex];
+    var dstOpt = dstSel.options[dstSel.selectedIndex];
+    var preview = document.getElementById('mappingPreview');
+    var banner = document.getElementById('compatBanner');
+
+    if (!srcOpt || !dstOpt || !srcOpt.value || !dstOpt.value) {
+      preview.style.display = 'none';
+      banner.style.display = 'none';
+      validateForm();
+      return;
+    }
+
+    var srcType = srcOpt.getAttribute('data-type');
+    var dstType = dstOpt.getAttribute('data-type');
+    var srcValues = srcOpt.getAttribute('data-values');
+    var dstValues = dstOpt.getAttribute('data-values');
+    srcValues = srcValues ? srcValues.split(',') : null;
+    dstValues = dstValues ? dstValues.split(',') : null;
+
+    preview.style.display = '';
+    document.getElementById('prevSrc').textContent = srcOpt.value;
+    document.getElementById('prevDst').textContent = dstOpt.value;
+
+    banner.style.display = '';
+    var text = document.getElementById('compatText');
+
+    function sameSet(a, b) {
+      if (a.length !== b.length) return false;
+      var sa = a.slice().sort(), sb = b.slice().sort();
+      return sa.every(function (v, i) { return v === sb[i]; });
+    }
+
+    if (srcType !== dstType) {
+      banner.className = 'banner banner-bad';
+      text.textContent = 'Разные типы полей (' + (TYPE_LABEL[srcType] || srcType) + ' → ' + (TYPE_LABEL[dstType] || dstType) + '). Тип поля-источника и поля объекта должен совпадать — сохранение недоступно.';
+    } else if (srcType === 'Select') {
+      if (srcValues && dstValues && sameSet(srcValues, dstValues)) {
+        banner.className = 'banner banner-good';
+        text.textContent = 'Тип и варианты списка совпадают. Значение будет перенесено без преобразования.';
+      } else {
+        banner.className = 'banner banner-bad';
+        text.innerHTML = 'Тип совпадает (список), но варианты ответа разные — сохранение недоступно.' +
+          '<div class="values-line">Источник: ' + (srcValues ? srcValues.join(', ') : '—') + '</div>' +
+          '<div class="values-line">Объект: ' + (dstValues ? dstValues.join(', ') : '—') + '</div>';
+      }
+    } else {
+      banner.className = 'banner banner-good';
+      text.textContent = 'Типы полей совпадают (' + (TYPE_LABEL[srcType] || srcType) + '). Значение будет перенесено без преобразования.';
+    }
+
+    validateForm();
+  }
+
+  function typesCompatible() {
+    var srcSel = document.getElementById('sourceFieldSelect');
+    var dstSel = document.getElementById('targetFieldSelect');
+    var srcOpt = srcSel.options[srcSel.selectedIndex];
+    var dstOpt = dstSel.options[dstSel.selectedIndex];
+    if (!srcOpt || !dstOpt || !srcOpt.value || !dstOpt.value) return false;
+    var srcType = srcOpt.getAttribute('data-type');
+    var dstType = dstOpt.getAttribute('data-type');
+    if (srcType !== dstType) return false;
+    if (srcType === 'Select') {
+      var srcValues = (srcOpt.getAttribute('data-values') || '').split(',');
+      var dstValues = (dstOpt.getAttribute('data-values') || '').split(',');
+      if (srcValues.length !== dstValues.length) return false;
+      var sa = srcValues.slice().sort(), sb = dstValues.slice().sort();
+      return sa.every(function (v, i) { return v === sb[i]; });
+    }
+    return true;
+  }
+
+  function validateForm() {
+    var isChecklist = document.getElementById('segChecklist').classList.contains('active');
+    var checklistOk = !isChecklist || !!document.getElementById('checklistSelect').value;
+    var srcOk = !!document.getElementById('sourceFieldSelect').value;
+    var dstOk = !!document.getElementById('targetFieldSelect').value;
+    var nameOk = document.getElementById('ruleNameInput').value.trim().length > 0;
+    var overwriteOk = !!document.querySelector('input[name="overwrite"]:checked');
+    var canSave = checklistOk && srcOk && dstOk && nameOk && overwriteOk && typesCompatible();
+    var saveBtn = document.getElementById('saveBtn');
+    saveBtn.disabled = !canSave;
+    saveBtn.title = canSave ? '' : 'Заполните все поля и выберите поля одного типа (для списков — с одинаковыми вариантами)';
+  }
+
+  function resetForm() {
+    document.getElementById('checklistSelect').value = '';
+    setSource('checklist');
+    document.getElementById('targetFieldSelect').value = '';
+    document.getElementById('ruleNameInput').value = '';
+    document.querySelectorAll('input[name="overwrite"]').forEach(function (r) { r.checked = false; });
+    document.getElementById('activeToggle').checked = true;
+    updatePreview();
+  }
+
+  var formSnapshot = null;
+
+  function getFormSnapshot() {
+    var overwriteEl = document.querySelector('input[name="overwrite"]:checked');
+    return JSON.stringify({
+      kind: document.getElementById('segChecklist').classList.contains('active') ? 'checklist' : 'task',
+      checklist: document.getElementById('checklistSelect').value,
+      source: document.getElementById('sourceFieldSelect').value,
+      target: document.getElementById('targetFieldSelect').value,
+      name: document.getElementById('ruleNameInput').value,
+      overwrite: overwriteEl ? overwriteEl.value : '',
+      active: document.getElementById('activeToggle').checked
+    });
+  }
+
+  function openDrawer(id) {
+    editingId = id || null;
+    var rule = editingId ? RULES.find(function (r) { return r.id === editingId; }) : null;
+    document.querySelector('.drawer-head h2').textContent = rule ? 'Изменить правило' : 'Новое правило';
+
+    if (rule) {
+      if (rule.sourceKind === 'checklist') document.getElementById('checklistSelect').value = rule.checklistName;
+      setSource(rule.sourceKind, rule.sourceFieldName);
+      document.getElementById('targetFieldSelect').value = rule.targetFieldName;
+      document.getElementById('ruleNameInput').value = rule.name;
+      document.querySelectorAll('input[name="overwrite"]').forEach(function (r) { r.checked = (r.value === rule.overwrite); });
+      document.getElementById('activeToggle').checked = rule.active;
+      updatePreview();
+    } else {
+      resetForm();
+    }
+
+    formSnapshot = getFormSnapshot();
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('scrim').classList.add('open');
+  }
+  function closeDrawer() {
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('scrim').classList.remove('open');
+  }
+  function onCancelClick() {
+    if (formSnapshot !== null && getFormSnapshot() !== formSnapshot) {
+      showConfirm('Отменить изменения?', 'Несохранённые изменения в этом правиле будут потеряны.', 'Не сохранять', closeDrawer);
+    } else {
+      closeDrawer();
+    }
+  }
+
+  function saveRule() {
+    if (!typesCompatible()) return;
+    var isChecklist = document.getElementById('segChecklist').classList.contains('active');
+    var srcSel = document.getElementById('sourceFieldSelect');
+    var dstSel = document.getElementById('targetFieldSelect');
+    var srcOpt = srcSel.options[srcSel.selectedIndex];
+    var dstOpt = dstSel.options[dstSel.selectedIndex];
+    var overwriteEl = document.querySelector('input[name="overwrite"]:checked');
+    if (!srcOpt.value || !dstOpt.value || !overwriteEl) return;
+
+    var data = {
+      name: document.getElementById('ruleNameInput').value.trim(),
+      sourceKind: isChecklist ? 'checklist' : 'task',
+      checklistName: isChecklist ? document.getElementById('checklistSelect').value : null,
+      sourceFieldName: srcOpt.value,
+      sourceFieldType: srcOpt.getAttribute('data-type'),
+      sourceFieldValues: srcOpt.getAttribute('data-values') ? srcOpt.getAttribute('data-values').split(',') : null,
+      targetFieldName: dstOpt.value,
+      targetFieldType: dstOpt.getAttribute('data-type'),
+      targetFieldValues: dstOpt.getAttribute('data-values') ? dstOpt.getAttribute('data-values').split(',') : null,
+      overwrite: overwriteEl.value,
+      active: document.getElementById('activeToggle').checked
+    };
+
+    if (editingId) {
+      var existing = RULES.find(function (r) { return r.id === editingId; });
+      Object.assign(existing, data);
+    } else {
+      data.id = nextId++;
+      data.created = new Date().toLocaleDateString('ru-RU');
+      RULES.push(data);
+    }
+
+    renderTable();
+    closeDrawer();
+  }
+
+  var confirmCallback = null;
+
+  function showConfirm(title, text, actionLabel, onConfirm) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmText').textContent = text;
+    var btn = document.getElementById('confirmActionBtn');
+    btn.textContent = actionLabel;
+    confirmCallback = onConfirm;
+    document.getElementById('deleteScrim').classList.add('open');
+    document.getElementById('deleteConfirm').classList.add('open');
+  }
+  function closeConfirm() {
+    confirmCallback = null;
+    document.getElementById('deleteScrim').classList.remove('open');
+    document.getElementById('deleteConfirm').classList.remove('open');
+  }
+  function runConfirmedAction() {
+    var cb = confirmCallback;
+    closeConfirm();
+    if (cb) cb();
+  }
+
+  function openDeleteConfirm(id) {
+    var rule = RULES.find(function (r) { return r.id === id; });
+    showConfirm(
+      'Удалить правило «' + (rule ? rule.name : '') + '»?',
+      'Перенос по этому правилу больше выполняться не будет. Действие нельзя отменить.',
+      'Удалить',
+      function () {
+        RULES = RULES.filter(function (r) { return r.id !== id; });
+        renderTable();
+      }
+    );
+  }
+
+  renderTable();
+  resetForm();
 </script>
 </body>
 </html>
